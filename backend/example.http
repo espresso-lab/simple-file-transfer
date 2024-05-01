@@ -1,0 +1,12 @@
+@port=9000
+@hostname=http://localhost:{{port}}
+
+
+### Get presigned url
+
+POST {{hostname}}/upload-url
+
+
+### Status
+
+GET {{hostname}}/status
