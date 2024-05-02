@@ -1,10 +1,17 @@
-@port=9000
+@port=4000
 @hostname=http://localhost:{{port}}
 
 
 ### Get presigned url
 
 POST {{hostname}}/upload-url
+Content-Type: application/json
+
+{
+    "file_name": "test.jpg",
+    "expires_in_secs": 6000
+}
+
 
 
 ### Status

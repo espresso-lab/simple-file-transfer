@@ -1,16 +1,27 @@
-use serde::{Deserialize, Serialize};
-use std::env;
-use std::time::Duration;
-// use aws_config::BehaviorVersion; // TODO: Remove if working
 use aws_sdk_s3 as s3;
+use once_cell::sync::Lazy;
 use s3::presigning::PresigningConfig;
 use s3::Client;
 use salvo::http::StatusCode;
 use salvo::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+use std::{env, process};
 use tokio::sync::OnceCell;
+use tracing::error;
+use validator::Validate;
 
 static CLIENT: OnceCell<Client> = OnceCell::const_new();
-static BUCKET_NAME: OnceCell<String> = OnceCell::const_new();
+static BUCKET_NAME: Lazy<String> = Lazy::new(|| {
+    let bucket_name = get_env("S3_BUCKET_NAME", Some(""));
+
+    if bucket_name.is_empty() {
+        error!("Env 'S3_BUCKET_NAME' is empty.");
+        process::exit(1);
+    }
+
+    bucket_name
+});
 
 fn get_env(key: &str, default: Option<&str>) -> String {
     env::var(key).unwrap_or_else(|_| default.unwrap_or("").to_owned())
@@ -19,10 +30,7 @@ fn get_env(key: &str, default: Option<&str>) -> String {
 // Initialize S3 slient
 async fn init_client() -> Client {
     let config = aws_config::load_from_env().await;
-    let s3_endpoint = get_env("S3_ENDPOINT", Some("")); // https://....
-
-    // TODO: Remove if working
-    // let config2 = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let s3_endpoint = get_env("S3_ENDPOINT", Some(""));
 
     if s3_endpoint.is_empty() {
         return aws_sdk_s3::Client::new(&config);
@@ -35,9 +43,11 @@ async fn init_client() -> Client {
     return aws_sdk_s3::Client::from_conf(local_config);
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Validate)]
 struct UploadRequest {
+    #[validate(length(min = 3))]
     file_name: String,
+    expires_in_secs: Option<u64>,
 }
 
 #[derive(Serialize, Debug)]
@@ -49,29 +59,46 @@ struct UploadResponse {
 // Generate presigned url
 #[handler]
 async fn upload_url_handler(req: &mut Request, res: &mut Response) {
-    let upload_request = req.parse_json::<UploadRequest>().await;
-    let file_name = upload_request.unwrap().file_name;
+    let upload_request = req
+        .parse_json::<UploadRequest>()
+        .await
+        .map_err(|_| {
+            res.status_code(StatusCode::BAD_REQUEST)
+                .render(Text::Plain("Invalid UploadRequest json."))
+        })
+        .unwrap();
 
-    let result_upload = CLIENT
-        .get()
-        .unwrap()
+    match upload_request.validate() {
+        Ok(_) => {}
+        Err(errors) => {
+            return res
+                .status_code(StatusCode::BAD_REQUEST)
+                .render(Text::Plain(errors.to_string()));
+        }
+    };
+
+    let file_name = upload_request.file_name;
+    let expires_in_secs = upload_request.expires_in_secs.unwrap_or_else(|| 86400);
+    let bucket_name = BUCKET_NAME.to_string();
+
+    let my_client = CLIENT.get().unwrap();
+
+    let result_upload = my_client
         .put_object()
-        .bucket(BUCKET_NAME.get().unwrap())
+        .bucket(&bucket_name)
         .key(file_name.clone())
         .presigned(
-            PresigningConfig::expires_in(Duration::from_secs(100))
+            PresigningConfig::expires_in(Duration::from_secs(600))
                 .unwrap()
                 .clone(),
         )
         .await;
 
-    let result_download = CLIENT
-        .get()
-        .unwrap()
+    let result_download = my_client
         .get_object()
-        .bucket(BUCKET_NAME.get().unwrap())
+        .bucket(&bucket_name)
         .key(file_name.clone())
-        .presigned(PresigningConfig::expires_in(Duration::from_secs(100)).unwrap())
+        .presigned(PresigningConfig::expires_in(Duration::from_secs(expires_in_secs)).unwrap())
         .await;
 
     return res.render(Json({
@@ -91,12 +118,11 @@ async fn ok_handler(res: &mut Response) {
 async fn main() {
     tracing_subscriber::fmt().init();
     CLIENT.get_or_init(init_client).await;
-    // BUCKET_NAME.get_or_init(|| "hallo".to_string());
 
     let router = Router::new()
         .push(Router::with_path("status").get(ok_handler))
         .push(Router::with_path("upload-url").post(upload_url_handler));
 
-    let acceptor = TcpListener::new("127.0.0.1:9000").bind().await;
+    let acceptor = TcpListener::new("0.0.0.0:4000").bind().await;
     Server::new(acceptor).serve(router).await;
 }
