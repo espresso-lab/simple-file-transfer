@@ -14,6 +14,7 @@ use tokio::sync::OnceCell;
 use tracing::error;
 use validator::Validate;
 
+static CORS_ALLOW_ORIGINS: Lazy<String> = Lazy::new(|| get_env("CORS_ALLOW_ORIGINS", Some("*")));
 static CLIENT: OnceCell<Client> = OnceCell::const_new();
 static BUCKET_NAME: Lazy<String> = Lazy::new(|| {
     let bucket_name = get_env("S3_BUCKET_NAME", Some(""));
@@ -114,8 +115,10 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
 
 #[handler]
 async fn apply_cors(req: &mut Request, res: &mut Response) {
-    res.headers_mut()
-        .insert(ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
+    res.headers_mut().insert(
+        ACCESS_CONTROL_ALLOW_ORIGIN,
+        HeaderValue::from_static(CORS_ALLOW_ORIGINS.as_str()),
+    );
 
     res.headers_mut()
         .insert(ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("*"));
@@ -137,7 +140,11 @@ async fn main() {
     let router = Router::new()
         .hoop(apply_cors)
         .push(Router::with_path("status").get(ok_handler))
-        .push(Router::with_path("upload-url").post(upload_url_handler));
+        .push(
+            Router::with_path("upload-url")
+                .post(upload_url_handler)
+                .options(ok_handler),
+        );
 
     let acceptor = TcpListener::new("0.0.0.0:4000").bind().await;
     Server::new(acceptor).serve(router).await;
