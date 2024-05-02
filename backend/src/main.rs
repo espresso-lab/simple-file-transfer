@@ -2,7 +2,10 @@ use aws_sdk_s3 as s3;
 use once_cell::sync::Lazy;
 use s3::presigning::PresigningConfig;
 use s3::Client;
-use salvo::http::StatusCode;
+use salvo::http::header::{
+    ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN,
+};
+use salvo::http::{HeaderValue, StatusCode};
 use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -110,6 +113,18 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
 }
 
 #[handler]
+async fn apply_cors(req: &mut Request, res: &mut Response) {
+    res.headers_mut()
+        .insert(ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
+
+    res.headers_mut()
+        .insert(ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("*"));
+
+    res.headers_mut()
+        .insert(ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("*"));
+}
+
+#[handler]
 async fn ok_handler(res: &mut Response) {
     res.status_code(StatusCode::OK).render(Text::Plain("OK"))
 }
@@ -120,6 +135,7 @@ async fn main() {
     CLIENT.get_or_init(init_client).await;
 
     let router = Router::new()
+        .hoop(apply_cors)
         .push(Router::with_path("status").get(ok_handler))
         .push(Router::with_path("upload-url").post(upload_url_handler));
 
