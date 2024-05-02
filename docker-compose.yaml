@@ -28,5 +28,6 @@ services:
       AWS_ACCESS_KEY_ID: "example"
       AWS_SECRET_ACCESS_KEY: "example1234"
       S3_BUCKET_NAME: "example"
+      CORS_ALLOW_ORIGINS: "*"
     ports:
       - 4000:4000

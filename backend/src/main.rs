@@ -2,9 +2,7 @@ use aws_sdk_s3 as s3;
 use once_cell::sync::Lazy;
 use s3::presigning::PresigningConfig;
 use s3::Client;
-use salvo::http::header::{
-    ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS, ACCESS_CONTROL_ALLOW_ORIGIN,
-};
+use salvo::http::header;
 use salvo::http::{HeaderValue, StatusCode};
 use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -63,6 +61,13 @@ struct UploadResponse {
 // Generate presigned url
 #[handler]
 async fn upload_url_handler(req: &mut Request, res: &mut Response) {
+    // TODO: Check if working
+    let _ = req.add_header(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static("application/json"),
+        true,
+    );
+
     let upload_request = req
         .parse_json::<UploadRequest>()
         .await
@@ -116,15 +121,19 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
 #[handler]
 async fn apply_cors(req: &mut Request, res: &mut Response) {
     res.headers_mut().insert(
-        ACCESS_CONTROL_ALLOW_ORIGIN,
+        header::ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_static(CORS_ALLOW_ORIGINS.as_str()),
     );
 
-    res.headers_mut()
-        .insert(ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("*"));
+    res.headers_mut().insert(
+        header::ACCESS_CONTROL_ALLOW_HEADERS,
+        HeaderValue::from_static("*"),
+    );
 
-    res.headers_mut()
-        .insert(ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("*"));
+    res.headers_mut().insert(
+        header::ACCESS_CONTROL_ALLOW_METHODS,
+        HeaderValue::from_static("*"),
+    );
 }
 
 #[handler]
