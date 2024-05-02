@@ -4,15 +4,29 @@ export function Upload() {
   function onDropFiles(event: ChangeEvent<HTMLInputElement>) {
     const fileList = event.target.files;
     [...(fileList ?? [])].map(async (file) => {
-      console.log(file);
-      const response = await fetch("http://localhost:4000/upload-url", {
-        method: "POST",
-        body: JSON.stringify({ file_name: file.name, expires_in_secs: 3600 }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      let { upload_url, download_url } = await fetch(
+        "http://localhost:4000/upload-url",
+        {
+          method: "POST",
+          body: JSON.stringify({ file_name: file.name, expires_in_secs: 3600 }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((res) => res.json());
+      upload_url = upload_url.replace(
+        "example.minio:9000",
+        "localhost:9000/example"
+      );
+      const res = await fetch(upload_url, {
+        method: "PUT",
+        body: file,
       });
-      console.log(response);
+      if (!res.ok) {
+        console.error("Failed to upload file");
+        return;
+      }
+      navigator.clipboard.writeText(download_url);
     });
   }
 

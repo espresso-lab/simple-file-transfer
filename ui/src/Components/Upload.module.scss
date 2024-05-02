@@ -9,7 +9,7 @@
 .form {
   display: flex;
   position: relative;
-  border: 2px dashed #747bff;
+  border: 3px dashed #747bff;
   border-radius: 20px;
   align-items: center;
   justify-content: center;
@@ -24,12 +24,14 @@
     height: 100%;
     width: 100%;
     z-index: 1;
+    cursor: pointer;
     &::file-selector-button {
       display: none;
     }
   }
   & > label {
     z-index: 0;
+    font-weight: bold;
   }
 }
 
