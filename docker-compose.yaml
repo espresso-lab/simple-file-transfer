@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  minio:
+    image: docker.io/bitnami/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - "./minio_data:/data"
+    environment:
+      MINIO_ROOT_USER: example
+      MINIO_ROOT_PASSWORD: example1234
+      MINIO_DEFAULT_BUCKETS: example
+      MINIO_DOMAIN: ""
+      MINIO_SCHEME: http
+      MINIO_SERVER_URL: "http://localhost:9000"
+
+  backend:
+    build: ./backend
+    develop:
+      watch:
+        - path: ./backend/src
+          action: rebuild
+    environment:
+      S3_ENDPOINT: "http://minio:9000"
+      AWS_REGION: "eu-central-1"
+      AWS_ACCESS_KEY_ID: "example"
+      AWS_SECRET_ACCESS_KEY: "example1234"
+      S3_BUCKET_NAME: "example"
+    ports:
+      - 4000:4000
