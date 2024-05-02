@@ -9,12 +9,12 @@ services:
     volumes:
       - "./minio_data:/data"
     environment:
-      - MINIO_ROOT_USER=example
-      - MINIO_ROOT_PASSWORD=example1234
-      - MINIO_DEFAULT_BUCKETS=example
-      # - MINIO_DOMAIN=localhost
-      # - MINIO_SCHEME=http
-      - MINIO_SERVER_URL=http://localhost:9000
+      MINIO_ROOT_USER: example
+      MINIO_ROOT_PASSWORD: example1234
+      MINIO_DEFAULT_BUCKETS: example
+      MINIO_DOMAIN: ""
+      MINIO_SCHEME: http
+      MINIO_SERVER_URL: "http://localhost:9000"
 
   backend:
     build: ./backend
