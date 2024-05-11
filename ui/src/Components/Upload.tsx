@@ -1,40 +1,54 @@
-import { ChangeEvent } from "react";
+import { ChangeEvent, useTransition } from "react";
 import classes from "./Upload.module.scss";
+import { useNotifications } from "../Context";
+
 export function Upload() {
+  const [isPending, startTransition] = useTransition();
+  const { notify } = useNotifications();
   function onDropFiles(event: ChangeEvent<HTMLInputElement>) {
     const fileList = event.target.files;
-    [...(fileList ?? [])].map(async (file) => {
-      let { upload_url, download_url } = await fetch(
-        "http://localhost:4000/upload-url",
-        {
+    startTransition(async function () {
+      [...(fileList ?? [])].map(async (file) => {
+        let { upload_url, download_url } = await fetch("/upload-url", {
           method: "POST",
-          body: JSON.stringify({ file_name: file.name, expires_in_secs: 3600 }),
+          body: JSON.stringify({
+            file_name: file.name,
+            expires_in_secs: 3600,
+          }),
           headers: {
             "Content-Type": "application/json",
           },
+        }).then((res) => res.json());
+        const res = await fetch(upload_url, {
+          method: "PUT",
+          body: file,
+        });
+        if (!res.ok) {
+          console.error("Failed to upload file");
+          return;
         }
-      ).then((res) => res.json());
-      upload_url = upload_url.replace(
-        "example.minio:9000",
-        "localhost:9000/example"
-      );
-      const res = await fetch(upload_url, {
-        method: "PUT",
-        body: file,
+        navigator.clipboard.writeText(download_url);
+        notify({
+          message: "Download link copied to clipboard",
+        });
       });
-      if (!res.ok) {
-        console.error("Failed to upload file");
-        return;
-      }
-      navigator.clipboard.writeText(download_url);
+      return;
     });
   }
 
   return (
     <div className={classes.dropzone}>
       <form className={classes.form}>
-        <input onChange={onDropFiles} name="files" type="file" multiple />
-        <label htmlFor="files">Drop it like it's hot.</label>
+        <input
+          disabled={isPending}
+          onChange={onDropFiles}
+          name="files"
+          type="file"
+          multiple
+        />
+        <label htmlFor="files">
+          {isPending ? "Loading..." : "Drop it like it's hot 🔥"}
+        </label>
       </form>
     </div>
   );

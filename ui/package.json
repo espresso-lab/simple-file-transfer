@@ -14,7 +14,6 @@
     "react-dom": "^19.0.0-beta-4508873393-20240430"
   },
   "devDependencies": {
-    "@types/dropzone": "^5.7.8",
     "@types/react": "npm:types-react@beta",
     "@types/react-dom": "npm:types-react-dom@beta",
     "@vitejs/plugin-react": "^4.2.1",

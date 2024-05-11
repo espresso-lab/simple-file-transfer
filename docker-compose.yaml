@@ -12,22 +12,25 @@ services:
       MINIO_ROOT_USER: example
       MINIO_ROOT_PASSWORD: example1234
       MINIO_DEFAULT_BUCKETS: example
-      MINIO_DOMAIN: ""
+      MINIO_DOMAIN: "localhost:9000"
       MINIO_SCHEME: http
       MINIO_SERVER_URL: "http://localhost:9000"
 
-  backend:
-    build: ./backend
+  files:
+    build: .
     develop:
       watch:
         - path: ./backend/src
           action: rebuild
+        - path: ./ui
+          action: rebuild
     environment:
-      S3_ENDPOINT: "http://minio:9000"
+      S3_ENDPOINT: "http://localhost:9000"
       AWS_REGION: "eu-central-1"
       AWS_ACCESS_KEY_ID: "example"
       AWS_SECRET_ACCESS_KEY: "example1234"
       S3_BUCKET_NAME: "example"
+      S3_FORCE_PATH_STYLE: "true"
       CORS_ALLOW_ORIGINS: "*"
     ports:
-      - 4000:4000
+      - 3000:3000
