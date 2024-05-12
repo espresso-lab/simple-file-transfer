@@ -1,11 +1,25 @@
 :root {
+  // Colors
+  --primary-dark: #c625ee;
+  --primary-light: #01a2ee;
+  --text-dark: #fefefe;
+  --text-light: #1d1d1d;
+  --background-dark: #3b3b3b;
+  --background-light: #ffffff;
+  --gray-dark: #565656;
+  --gray-light: #e5e5e5;
+
+  // Shadows
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05) 0 28px 23px -7px,
+    rgba(0, 0, 0, 0.04) 0 12px 12px -7px;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: light-dark(var(--text-light), var(--text-dark));
+  background-color: light-dark(var(--background-light), var(--background-dark));
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -20,11 +34,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: light-dark(var(--primary-light), var(--primary-dark));
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  filter: brightness(85%);
 }
 
 body {
@@ -47,22 +61,22 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: light-dark(var(--gray-light), var(--gray-dark));
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: light-dark(var(--primary-light), var(--primary-dark));
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
 }
 
 input {
   display: inline-block;
   border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid light-dark(var(--gray-light), var(--gray-dark));
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
@@ -71,22 +85,9 @@ input {
   transition: border-color 0.25s;
 }
 input:hover {
-  border-color: #646cff;
+  border-color: light-dark(var(--primary-light), var(--primary-dark));
 }
 input:focus,
 input:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  outline: 4px auto light-dark(var(--primary-light), var(--primary-dark));
 }

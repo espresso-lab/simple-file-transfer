@@ -1,15 +1,20 @@
 import { ChangeEvent, useTransition } from "react";
 import classes from "./Upload.module.scss";
 import { useNotifications } from "../Context";
+import { copy } from "../Utils";
 
 export function Upload() {
+  const uploadUrl =
+    location.hostname === "localhost"
+      ? "http://localhost:3000/upload-url"
+      : "/upload-url";
   const [isPending, startTransition] = useTransition();
   const { notify } = useNotifications();
   function onDropFiles(event: ChangeEvent<HTMLInputElement>) {
     const fileList = event.target.files;
-    startTransition(async function () {
+    startTransition(function () {
       [...(fileList ?? [])].map(async (file) => {
-        let { upload_url, download_url } = await fetch("/upload-url", {
+        let { upload_url, download_url } = await fetch(uploadUrl, {
           method: "POST",
           body: JSON.stringify({
             file_name: file.name,
@@ -27,10 +32,14 @@ export function Upload() {
           console.error("Failed to upload file");
           return;
         }
-        navigator.clipboard.writeText(download_url);
-        notify({
-          message: "Download link copied to clipboard",
-        });
+        copy(download_url)
+          .then(() =>
+            notify({
+              type: "success",
+              message: "Download link copied to clipboard.",
+            })
+          )
+          .catch((error: string) => notify({ type: "error", message: error }));
       });
       return;
     });
