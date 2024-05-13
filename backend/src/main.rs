@@ -91,7 +91,7 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
     };
 
     let file_name = upload_request.file_name;
-    let expires_in_secs = upload_request.expires_in_secs.unwrap_or_else(|| 86400);
+    let expires_in_secs = upload_request.expires_in_secs.unwrap_or(86400 * 7);
     let bucket_name = BUCKET_NAME.to_string();
 
     let my_client = CLIENT.get().unwrap();
