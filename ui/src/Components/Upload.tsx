@@ -33,19 +33,29 @@ export function Upload() {
           console.error("Failed to upload file");
           return;
         }
-        notify({
-          type: "info",
-          message: "Click here to copy the download link.",
-          duration: 10000,
-          actionIcon: CopyIcon,
-          onAction: () =>
-            copy(download_url).then(() =>
-              notify({
-                type: "success",
-                message: "Link copied to clipboard.",
-              })
-            ),
-        });
+
+        copy(download_url)
+          .then(() =>
+            notify({
+              type: "success",
+              message: "Link copied to clipboard.",
+            })
+          )
+          .catch(() =>
+            notify({
+              type: "info",
+              message: "Click here to copy the download link.",
+              duration: 10000,
+              actionIcon: CopyIcon,
+              onAction: () =>
+                copy(download_url).then(() =>
+                  notify({
+                    type: "success",
+                    message: "Link copied to clipboard.",
+                  })
+                ),
+            })
+          );
       });
       return;
     });
