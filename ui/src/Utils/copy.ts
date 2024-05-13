@@ -3,8 +3,6 @@ export function copy(text: string) {
     return navigator.clipboard.writeText(text);
   } else {
     let textarea;
-    let result;
-
     try {
       textarea = document.createElement("textarea");
       textarea.setAttribute("readonly", "true");
@@ -25,10 +23,9 @@ export function copy(text: string) {
       sel?.addRange(range);
 
       textarea.setSelectionRange(0, textarea.value.length);
-      result = document.execCommand("copy");
+      document.execCommand("copy");
     } catch (err) {
       console.error(err);
-      result = null;
     } finally {
       if (textarea) document.body.removeChild(textarea);
     }
