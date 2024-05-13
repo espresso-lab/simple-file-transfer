@@ -5,6 +5,8 @@ export interface Notification {
   message: string;
   type?: "error" | "success" | "info" | "warning";
   duration?: number;
+  actionIcon?: string;
+  onAction?: () => void;
 }
 
 export interface TechNotification extends Notification {

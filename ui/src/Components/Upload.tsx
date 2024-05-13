@@ -2,6 +2,7 @@ import { ChangeEvent, useTransition } from "react";
 import classes from "./Upload.module.scss";
 import { useNotifications } from "../Context";
 import { copy } from "../Utils";
+import CopyIcon from "../Icons/copy.svg";
 
 export function Upload() {
   const uploadUrl =
@@ -32,14 +33,19 @@ export function Upload() {
           console.error("Failed to upload file");
           return;
         }
-        copy(download_url)
-          .then(() =>
-            notify({
-              type: "success",
-              message: "Download link copied to clipboard.",
-            })
-          )
-          .catch((error: string) => notify({ type: "error", message: error }));
+        notify({
+          type: "info",
+          message: "Click here to copy the download link.",
+          duration: 10000,
+          actionIcon: CopyIcon,
+          onAction: () =>
+            copy(download_url).then(() =>
+              notify({
+                type: "success",
+                message: "Link copied to clipboard.",
+              })
+            ),
+        });
       });
       return;
     });

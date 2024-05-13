@@ -13,15 +13,23 @@ export function NotificationStack({
 }: NotificationProps) {
   return (
     <div className={classes.notificationStack}>
-      {notifications.map(({ id, type, message, state }, index) => (
-        <Notification
-          key={`notification_${index}`}
-          type={type}
-          message={message}
-          onClose={() => closeNotification(id)}
-          state={state}
-        />
-      ))}
+      {notifications.map(
+        (
+          { id, type, message, state, duration, onAction, actionIcon },
+          index
+        ) => (
+          <Notification
+            key={`notification_${index}`}
+            type={type}
+            message={message}
+            onClose={() => closeNotification(id)}
+            state={state}
+            duration={duration}
+            onAction={onAction}
+            actionIcon={actionIcon}
+          />
+        )
+      )}
     </div>
   );
 }

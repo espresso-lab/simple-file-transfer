@@ -4,7 +4,6 @@ import classes from "./Notification.module.scss";
 import CloseIcon from "../Icons/close.svg";
 
 interface NotificationProps extends NotificationType {
-  duration?: number;
   onClose: () => void;
   state: "active" | "closing" | "closed";
 }
@@ -15,6 +14,8 @@ export function Notification({
   onClose,
   message,
   state,
+  actionIcon,
+  onAction,
 }: NotificationProps) {
   useEffect(() => {
     switch (state) {
@@ -31,6 +32,14 @@ export function Notification({
   return (
     <div className={classNames}>
       {message}
+      {actionIcon?.length && (
+        <button
+          className={classes.button}
+          {...(onAction && { onClick: onAction })}
+        >
+          <img className={classes.icon} src={actionIcon} />
+        </button>
+      )}
       <button className={classes.button} onClick={onClose}>
         <img className={classes.icon} src={CloseIcon} />
       </button>
