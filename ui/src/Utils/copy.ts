@@ -2,33 +2,39 @@ export function copy(text: string) {
   if (navigator?.clipboard?.writeText) {
     return navigator.clipboard.writeText(text);
   } else {
-    let textarea;
-    try {
-      textarea = document.createElement("textarea");
-      textarea.setAttribute("readonly", "true");
-      textarea.setAttribute("contenteditable", "true");
-      textarea.style.position = "fixed"; // prevent scroll from jumping to the bottom when focus is set.
-      textarea.value = text;
-
-      document.body.appendChild(textarea);
-
-      textarea.focus();
-      textarea.select();
-
-      const range = document.createRange();
-      range.selectNodeContents(textarea);
-
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-
-      textarea.setSelectionRange(0, textarea.value.length);
-      document.execCommand("copy");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (textarea) document.body.removeChild(textarea);
-    }
-    return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      const element = document.createElement("textarea");
+      const previouslyFocusedElement = document.activeElement as HTMLElement;
+      element.value = text;
+      element.setAttribute("readonly", "");
+      element.style.contain = "strict";
+      element.style.position = "absolute";
+      element.style.left = "-9999px";
+      element.style.fontSize = "12pt"; // Prevent zooming on iOS
+      const selection = document.getSelection();
+      const originalRange =
+        selection && selection.rangeCount > 0 && selection?.getRangeAt(0);
+      document.body.append(element);
+      element.select();
+      element.selectionStart = 0;
+      element.selectionEnd = text.length;
+      let isSuccess = false;
+      try {
+        isSuccess = document.execCommand("copy");
+      } catch {}
+      element.remove();
+      if (originalRange) {
+        selection.removeAllRanges();
+        selection.addRange(originalRange);
+      }
+      if (previouslyFocusedElement) {
+        previouslyFocusedElement.focus();
+      }
+      if (isSuccess) {
+        return resolve();
+      } else {
+        reject("Failed to copy to clipboard.");
+      }
+    });
   }
 }
