@@ -65,7 +65,6 @@ struct UploadResponse {
 // Generate presigned url
 #[handler]
 async fn upload_url_handler(req: &mut Request, res: &mut Response) {
-    // TODO: Check if working
     let _ = req.add_header(
         header::CONTENT_TYPE,
         HeaderValue::from_static("application/json"),
