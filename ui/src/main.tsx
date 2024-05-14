@@ -1,13 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
-import "./index.scss";
-import { NotificationsProvider } from "./Context";
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+import Uploader from "./Uploader";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <NotificationsProvider>
-      <App />
-    </NotificationsProvider>
+    <MantineProvider theme={{ fontFamily: "Open Sans" }} forceColorScheme="light">
+      <Uploader />
+    </MantineProvider>{" "}
   </React.StrictMode>
 );
