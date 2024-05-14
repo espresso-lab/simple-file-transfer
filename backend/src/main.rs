@@ -8,7 +8,7 @@ use salvo::http::{HeaderValue, StatusCode};
 use salvo::prelude::*;
 use salvo::serve_static::StaticDir;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{env, process};
 use tokio::sync::OnceCell;
 use tracing::error;
@@ -89,7 +89,8 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
         }
     };
 
-    let file_name = upload_request.file_name;
+    let nonce = Instant::now().elapsed().as_secs().to_string();
+    let file_name = format!("{}/{}", nonce, upload_request.file_name);
     let expires_in_secs = upload_request.expires_in_secs.unwrap_or(86400 * 7);
     let bucket_name = BUCKET_NAME.to_string();
 
