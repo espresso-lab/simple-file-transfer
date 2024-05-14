@@ -6,8 +6,8 @@ import Uploader from "./Uploader";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <MantineProvider theme={{ fontFamily: "Open Sans" }} forceColorScheme="light">
+    <MantineProvider forceColorScheme="light">
       <Uploader />
-    </MantineProvider>{" "}
+    </MantineProvider>
   </React.StrictMode>
 );
