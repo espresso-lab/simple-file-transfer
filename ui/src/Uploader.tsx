@@ -27,17 +27,17 @@ function Uploader() {
   return (
     <>
       <Box
-        p={15}
         display={"block"}
         m={0}
         pos={"absolute"}
+        top={"50%"}
+        left={"50%"}
+        w={"100%"}
+        maw={"rem(500)"}
         style={{
-          top: "50%",
-          left: "50%",
           transform: "translate(-50%, -50%)",
-          width: "100%",
-          maxWidth: rem(500),
           pointerEvents: "none",
+          boxSizing: "border-box",
         }}
       >
         <Center mb={15}>
