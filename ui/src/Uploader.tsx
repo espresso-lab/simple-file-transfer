@@ -148,6 +148,17 @@ function Uploader() {
             setFilename(fileName);
             setDownloadLink(download_url);
             navigator.clipboard.writeText(download_url);
+
+            if (navigator.share) {
+              navigator
+                .share({
+                  title: "Share link " + fileName,
+                  text: "File Link:",
+                  url: window.location.href,
+                })
+                .then(() => console.log("Successful share"))
+                .catch((error) => console.log("Error sharing:", error));
+            }
           }
         }}
       >
