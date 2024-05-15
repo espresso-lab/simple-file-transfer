@@ -8,10 +8,11 @@ use salvo::http::{HeaderValue, StatusCode};
 use salvo::prelude::*;
 use salvo::serve_static::StaticDir;
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use std::{env, process};
 use tokio::sync::OnceCell;
 use tracing::error;
+use uuid::Uuid;
 use validator::Validate;
 
 static CORS_ALLOW_ORIGINS: Lazy<String> =
@@ -62,7 +63,6 @@ struct UploadResponse {
     download_url: String,
 }
 
-// Generate presigned url
 #[handler]
 async fn upload_url_handler(req: &mut Request, res: &mut Response) {
     let _ = req.add_header(
@@ -89,11 +89,9 @@ async fn upload_url_handler(req: &mut Request, res: &mut Response) {
         }
     };
 
-    let nonce = Instant::now().elapsed().as_secs().to_string();
-    let file_name = format!("{}/{}", nonce, upload_request.file_name);
+    let file_name = format!("{}/{}", Uuid::new_v4(), upload_request.file_name);
     let expires_in_secs = upload_request.expires_in_secs.unwrap_or(86400 * 7);
     let bucket_name = BUCKET_NAME.to_string();
-
     let my_client = CLIENT.get().unwrap();
 
     let result_upload = my_client
@@ -135,16 +133,6 @@ async fn cors(_req: &mut Request, res: &mut Response) {
     res.headers_mut().insert(
         header::ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_static(CORS_ALLOW_ORIGINS.as_str()),
-    );
-
-    res.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_HEADERS,
-        HeaderValue::from_static("*"),
-    );
-
-    res.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_METHODS,
-        HeaderValue::from_static("*"),
     );
 }
 
