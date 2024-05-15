@@ -1,5 +1,6 @@
 FROM clux/muslrust:stable AS chef
 USER root
+RUN update-ca-certificates
 RUN cargo install cargo-chef
 WORKDIR /app
 
@@ -32,5 +33,6 @@ RUN upx --best --lzma ./files
 FROM scratch AS runtime
 COPY --from=builder /app/files /app
 COPY --from=frontend /app/dist /static
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 EXPOSE 3000
 CMD ["/app"]
