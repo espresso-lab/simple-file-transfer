@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconFilePlus, IconArrowDown } from "@tabler/icons-react";
 import { Dropzone } from "@mantine/dropzone";
+import { downloadZip } from "client-zip";
 
 function Uploader() {
   const openRef = useRef<() => void>(null);
@@ -109,38 +110,46 @@ function Uploader() {
         onDragLeave={() => {
           setIsDragging(false);
         }}
-        onDrop={(files) => {
+        onDrop={async (files) => {
           setIsDragging(false);
           setDownloadLink(undefined);
           setIsPending(true);
+          let file = null;
+          let fileName: string | undefined = undefined;
 
-          [...(files ?? [])].map(async (file) => {
-            let { upload_url, download_url } = await fetch(uploadUrl, {
-              method: "POST",
-              body: JSON.stringify({
-                file_name: file.name,
-                expires_in_secs: 7 * 24 * 60 * 60, // 7 days
-              }),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }).then((res) => res.json());
+          if (files.length >= 2) {
+            file = await downloadZip(files, { buffersAreUTF8: true }).blob();
+            fileName = files[0].name + "-archive.zip";
+          } else {
+            file = files[0];
+            fileName = file.name;
+          }
 
-            const res = await fetch(upload_url, {
-              method: "PUT",
-              body: file,
-            });
+          let { upload_url, download_url } = await fetch(uploadUrl, {
+            method: "POST",
+            body: JSON.stringify({
+              file_name: fileName,
+              expires_in_secs: 7 * 24 * 60 * 60, // 7 days
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }).then((res) => res.json());
 
-            setIsPending(false);
-
-            if (!res.ok) {
-              console.error("Failed to upload file");
-            } else {
-              setFilename(file.name);
-              setDownloadLink(download_url);
-              navigator.clipboard.writeText(download_url);
-            }
+          const res = await fetch(upload_url, {
+            method: "PUT",
+            body: file,
           });
+
+          setIsPending(false);
+
+          if (!res.ok) {
+            console.error("Failed to upload file");
+          } else {
+            setFilename(fileName);
+            setDownloadLink(download_url);
+            navigator.clipboard.writeText(download_url);
+          }
         }}
       >
         <div style={{ height: "100vh", width: "100vw", pointerEvents: "none" }}> </div>
