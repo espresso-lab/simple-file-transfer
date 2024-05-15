@@ -26,6 +26,9 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        navigateFallbackDenylist: [/^\/upload.*/, /^\/status.*/, /.*/], // TODO
+      },
     }),
   ],
 });
