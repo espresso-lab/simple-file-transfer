@@ -28,7 +28,6 @@ function Uploader() {
     <>
       <Box
         display={"block"}
-        m={0}
         pos={"absolute"}
         top={"50%"}
         left={"50%"}
@@ -152,7 +151,18 @@ function Uploader() {
           }
         }}
       >
-        <div style={{ height: "100vh", width: "100vw", pointerEvents: "none" }}> </div>
+        <div
+          style={{
+            height: "100vh",
+            maxHeight: "-webkit-fill-available",
+            width: "100vw",
+            pointerEvents: "none",
+            boxSizing: "border-box",
+            fontSize: 0,
+          }}
+        >
+          {" "}
+        </div>
       </Dropzone.FullScreen>
     </>
   );
