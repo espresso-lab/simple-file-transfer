@@ -20,8 +20,8 @@ salvo = { version = "0", features = ["server", "quinn", "serve-static"], default
 tokio = { version = "1", features = ["rt", "macros"], default-features = false }
 tracing = "0"
 tracing-subscriber = "0"
-aws-config = { version = "1", features = ["rt-tokio", "behavior-version-latest", "rustls"], default-features = false }
-aws-sdk-s3 = { version = "1", features = ["rt-tokio", "behavior-version-latest", "rustls"], default-features = false }
+aws-config = { version = "1", features = ["rt-tokio", "behavior-version-latest"], default-features = false }
+aws-sdk-s3 = { version = "1", features = ["rt-tokio", "behavior-version-latest"], default-features = false }
 serde = { version = "1", features = ["derive"], default-features = false }
 once_cell = { version = "1", default-features = false }
 validator = { version = "0", features = ["derive"], default-features = false }
