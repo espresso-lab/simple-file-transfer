@@ -14,15 +14,15 @@ import { IconFilePlus, IconArrowDown } from "@tabler/icons-react";
 import { Dropzone } from "@mantine/dropzone";
 import { downloadZip } from "client-zip";
 
-// PWA Fix: Reload page
-// TODO: Find a better solution
-window.addEventListener("visibilitychange", function () {
-  console.log("Visibility changed");
-  if (document.visibilityState === "visible") {
-    console.log("APP resumed");
-    window.location.reload();
-  }
-});
+// // PWA Fix: Reload page
+// // TODO: Find a better solution
+// window.addEventListener("visibilitychange", function () {
+//   console.log("Visibility changed");
+//   if (document.visibilityState === "visible") {
+//     console.log("APP resumed");
+//     window.location.reload();
+//   }
+// });
 
 function Uploader() {
   const openRef = useRef<() => void>(null);
