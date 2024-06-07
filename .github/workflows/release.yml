@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
 
 jobs:
   release:
@@ -14,6 +16,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/espresso-lab/files
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -32,5 +40,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/espresso-lab/files:latest
-          platforms: linux/amd64 # ,linux/arm64 TODO: Add support for ARM64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
