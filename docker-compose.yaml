@@ -16,7 +16,7 @@ services:
       MINIO_SCHEME: http
       MINIO_SERVER_URL: "http://localhost:9000"
 
-  files:
+  simple-file-transfer:
     build: .
     develop:
       watch:

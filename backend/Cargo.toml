@@ -1,27 +1,37 @@
 [package]
-name = "files"
+name = "simple-file-transfer"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [[bin]]
-name = "files"
+name = "simple-file-transfer"
 path = "src/main.rs"
 
 [profile.release]
-opt-level = "z"     # Optimize for size.
-lto = true          # Enable Link Time Optimization
-codegen-units = 1   # Reduce number of codegen units to increase optimizations.
-panic = "abort"     # Abort on panic
-strip = true        # Automatically strip symbols from the binary.
+opt-level = "z"   # Optimize for size.
+lto = true        # Enable Link Time Optimization
+codegen-units = 1 # Reduce number of codegen units to increase optimizations.
+panic = "abort"   # Abort on panic
+strip = true      # Automatically strip symbols from the binary.
 
 [dependencies]
-salvo = { version = "0", features = ["server", "quinn", "serve-static"], default-features = false }
+salvo = { version = "0", features = [
+    "server",
+    "quinn",
+    "serve-static",
+], default-features = false }
 tokio = { version = "1", features = ["rt", "macros"], default-features = false }
 tracing = "0"
 tracing-subscriber = "0"
-aws-config = { version = "1", features = ["rt-tokio", "behavior-version-latest"] }
-aws-sdk-s3 = { version = "1", features = ["rt-tokio", "behavior-version-latest"] }
+aws-config = { version = "1", features = [
+    "rt-tokio",
+    "behavior-version-latest",
+] }
+aws-sdk-s3 = { version = "1", features = [
+    "rt-tokio",
+    "behavior-version-latest",
+] }
 serde = { version = "1", features = ["derive"], default-features = false }
 once_cell = { version = "1", default-features = false }
 validator = { version = "0", features = ["derive"], default-features = false }
