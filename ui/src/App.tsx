@@ -1,7 +1,6 @@
 import "@mantine/core/styles.css";
 import "@mantine/dropzone/styles.css";
 import { ColorSchemeScript, Container, MantineProvider } from "@mantine/core";
-import { Notifications } from "@mantine/notifications";
 import { Uploader } from "./Components/Uploader";
 
 export default function App() {
@@ -14,7 +13,6 @@ export default function App() {
           primaryColor: "violet",
         }}
       >
-        <Notifications />
         <Container
           style={{
             minHeight: "100vh",
