@@ -780,22 +780,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "files"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-s3",
- "once_cell",
- "salvo",
- "serde",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "validator",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2147,6 +2131,22 @@ checksum = "74233d3b3b2f6d4b006dc19dee745e73e2a6bfb6f93607cd3b02bd5b00797d7c"
 dependencies = [
  "digest",
  "rand_core",
+]
+
+[[package]]
+name = "simple-file-transfer"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-s3",
+ "once_cell",
+ "salvo",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "validator",
 ]
 
 [[package]]

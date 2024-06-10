@@ -1,39 +1,26 @@
-import { useRef, useState } from "react";
 import {
-  Text,
-  Button,
-  rem,
-  Center,
   ActionIcon,
   Box,
-  Loader,
+  Button,
+  Center,
   CopyButton,
+  Loader,
+  rem,
+  Text,
   Tooltip,
 } from "@mantine/core";
-import { IconFilePlus, IconArrowDown } from "@tabler/icons-react";
 import { Dropzone } from "@mantine/dropzone";
+import { IconArrowDown, IconFilePlus } from "@tabler/icons-react";
 import { downloadZip } from "client-zip";
+import { useRef, useState } from "react";
+import { fetchPresignedUrls } from "../Requests/api";
 
-// // PWA Fix: Reload page
-// // TODO: Find a better solution
-// window.addEventListener("visibilitychange", function () {
-//   console.log("Visibility changed");
-//   if (document.visibilityState === "visible") {
-//     console.log("APP resumed");
-//     window.location.reload();
-//   }
-// });
-
-function Uploader() {
+export function Uploader() {
   const openRef = useRef<() => void>(null);
   const [filename, setFilename] = useState<string | undefined>();
   const [downloadLink, setDownloadLink] = useState<string | undefined>();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isPending, setIsPending] = useState<boolean>(false);
-
-  const uploadUrl =
-    location.hostname === "localhost" ? "http://localhost:3000/upload-url" : "/upload-url";
-
   return (
     <>
       <Box
@@ -68,22 +55,34 @@ function Uploader() {
             {isPending ? (
               <Loader color="white" />
             ) : isDragging ? (
-              <IconArrowDown style={{ width: rem(80), height: rem(80) }} stroke={1.5} />
+              <IconArrowDown
+                style={{ width: rem(80), height: rem(80) }}
+                stroke={1.5}
+              />
             ) : (
-              <IconFilePlus style={{ width: rem(80), height: rem(80) }} stroke={1.5} />
+              <IconFilePlus
+                style={{ width: rem(80), height: rem(80) }}
+                stroke={1.5}
+              />
             )}
           </ActionIcon>
         </Center>
 
         <Text ta="center" size="xl" fw={600}>
-          {isPending ? "Uploading..." : isDragging ? "Drop it like it's hot!" : "Upload files"}
+          {isPending
+            ? "Uploading..."
+            : isDragging
+              ? "Drop it like it's hot!"
+              : "Upload files"}
         </Text>
 
-        <Text size="sm" c="dimmed">
-          <Center>
-            {!isPending && !isDragging ? "Drag & drop files here to upload." : "\u00A0"}
-          </Center>
-        </Text>
+        <Center>
+          <Text size="sm" c="dimmed">
+            {!isPending && !isDragging
+              ? "Drag & drop files here to upload."
+              : "\u00A0"}
+          </Text>
+        </Center>
       </Box>
 
       {downloadLink && (
@@ -134,16 +133,10 @@ function Uploader() {
             fileName = file.name;
           }
 
-          let { upload_url, download_url } = await fetch(uploadUrl, {
-            method: "POST",
-            body: JSON.stringify({
-              file_name: fileName,
-              expires_in_secs: 7 * 24 * 60 * 60, // 7 days
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }).then((res) => res.json());
+          const { upload_url, download_url } = await fetchPresignedUrls({
+            file_name: fileName,
+            expires_in_secs: 7 * 24 * 60 * 60, // 7 days
+          });
 
           const res = await fetch(upload_url, {
             method: "PUT",
@@ -171,20 +164,7 @@ function Uploader() {
             }
           }
         }}
-      >
-        <div
-          style={{
-            height: "100vh",
-            maxHeight: "-webkit-fill-available",
-            width: "100vw",
-            pointerEvents: "none",
-            boxSizing: "border-box",
-            fontSize: 0,
-          }}
-        >
-          {" "}
-        </div>
-      </Dropzone.FullScreen>
+      ></Dropzone.FullScreen>
     </>
   );
 }
