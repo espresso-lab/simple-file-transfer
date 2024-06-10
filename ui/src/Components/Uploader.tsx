@@ -168,5 +168,3 @@ export function Uploader() {
     </>
   );
 }
-
-export default Uploader;
