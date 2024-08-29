@@ -20,6 +20,11 @@ A web app for simple and secure file sharing.
 
 https://github.com/user-attachments/assets/97a12fc7-1add-43bc-bd00-6174f802a1cc
 
+## Installation
+
+* Docker Compose: https://github.com/espresso-lab/simple-file-transfer/blob/main/docker-compose.yaml
+* Helm Chart: https://github.com/espresso-lab/helm-charts
+
 ## Further infos
 
 - Issues, PR and contributions welcome! :)
