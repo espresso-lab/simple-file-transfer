@@ -1,5 +1,7 @@
 # Simple File Transfer
 
+A web app for simple and secure file sharing.
+
 
 [![GitHub tag](https://img.shields.io/github/tag/espresso-lab/simple-file-transfer?include_prereleases=&sort=semver&color=blue)](https://github.com/espresso-lab/simple-file-transfer/tags/)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
@@ -7,10 +9,11 @@
 
 ## Features
 
-- Blazing fast ⚡️ and written in Rust ⚙️
-- Clean and minimalistic UI
+- Upload files via drag'n'drop or via the "+" icon
+- Generate a secure shareable link (implemented via S3 presigned urls)
+- Blazing fast backend ⚡️ written in Rust ⚙️
+- Clean and minimalistic UI 
 - Upload files to S3 or S3 compatible storage (e.g. MinIO)
-- Share files with a S3 presigned URL
 - Shipped as a single container image
 
 ## Demo
