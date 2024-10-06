@@ -1,0 +1,6 @@
+FROM rust:latest AS builder
+WORKDIR /app
+COPY Cargo* .
+CMD cargo install
+COPY . .
+CMD cargo run

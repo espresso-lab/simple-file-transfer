@@ -16,23 +16,12 @@ panic = "abort"   # Abort on panic
 strip = true      # Automatically strip symbols from the binary.
 
 [dependencies]
-salvo = { version = "0", features = [
-    "server",
-    "quinn",
-    "serve-static",
-], default-features = false }
-tokio = { version = "1", features = ["rt", "macros"], default-features = false }
-tracing = "0"
-tracing-subscriber = "0"
-aws-config = { version = "1", features = [
-    "rt-tokio",
-    "behavior-version-latest",
-] }
-aws-sdk-s3 = { version = "1", features = [
-    "rt-tokio",
-    "behavior-version-latest",
-] }
+actix-web = "4"
+actix-cors = "0"
+actix-files = "0"
+env_logger = "0"
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
 serde = { version = "1", features = ["derive"], default-features = false }
-once_cell = { version = "1", default-features = false }
 validator = { version = "0", features = ["derive"], default-features = false }
 uuid = { version = "1", features = ["fast-rng", "v4"] }
