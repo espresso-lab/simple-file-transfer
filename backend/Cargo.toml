@@ -27,3 +27,4 @@ validator = { version = "0", features = ["derive"], default-features = false }
 uuid = { version = "1", features = ["fast-rng", "v4"] }
 reqwest = { version = "0.12.8", features = ["json", "rustls-tls"], default-features = false }
 chrono = { version = "0", features = ["serde"] }
+confique = "0"
