@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_files as fs;
-use actix_web::{get, middleware::Logger, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, middleware::Logger, post, web, App, Error, HttpResponse, HttpServer, Responder};
 use aws_config::SdkConfig;
 use aws_sdk_s3 as s3;
 use env_logger::Env;
@@ -24,6 +24,7 @@ fn init_client(config: &SdkConfig) -> Client {
         .endpoint_url(s3_endpoint)
         .force_path_style(env::var("S3_FORCE_PATH_STYLE").unwrap_or_default() == "true")
         .build();
+
     Client::from_conf(local_config)
 }
 
@@ -44,13 +45,6 @@ struct UploadResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct UploadReadyRequest {
-    file_name: String,
-    download_url: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 struct LinkShortenerRequest {
     slug: String,
     url: String,
@@ -59,7 +53,7 @@ struct LinkShortenerRequest {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct LinkWithSlugUrl {
+pub struct LinkShortenerResponse {
     pub forwarder_url: String,
 }
 
@@ -75,11 +69,13 @@ async fn generate_short_url(download_url: String, file_name: String, expires_in_
     };
     let response = reqwest::Client::new()
         .post(&link_shortener_endpoint)
-        .json(&LinkShortenerRequest { slug, url: download_url.clone() })
+        .json(&LinkShortenerRequest { slug, url: download_url.clone(), expires_in_secs })
         .send()
-        .await?;
-    let link: LinkWithSlugUrl = response.json().await?;
-    Ok(link.url_slug.unwrap_or(download_url))
+        .await.unwrap();
+
+    let link: LinkShortenerResponse = response.json().await.unwrap();
+
+    Ok(link.forwarder_url)
 }
 
 #[post("/upload-url")]
@@ -105,11 +101,13 @@ async fn upload_url_handler(req: web::Json<UploadRequest>, data: web::Data<AppSt
         .await?
         .uri()
         .to_string();
+
     if env::var("LINK_SHORTENER_ENDPOINT").is_ok() {
-        if let Ok(val) = generate_short_url(download_url.clone(), file_name).await {
+        if let Ok(val) = generate_short_url(download_url.clone(), file_name, expires_in_secs).await {
             download_url = val;
         }
     }
+
     Ok(HttpResponse::Ok().json(UploadResponse {
         upload_url: result_upload.uri().to_string(),
         download_url,
