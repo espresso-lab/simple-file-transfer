@@ -17,7 +17,7 @@ import {IconArrowDown, IconCheck, IconCopy, IconFilePlus, IconShare} from "@tabl
 import axios, { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { downloadZip } from "client-zip";
 import { useRef, useState } from "react";
-import {fetchPresignedUrls, fetchUploadReady} from "../Requests/api";
+import {fetchPresignedUrls} from "../Requests/api";
 
 export function Uploader() {
   const dropzoneOpenRef = useRef<() => void>(null);
@@ -47,8 +47,8 @@ export function Uploader() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    let fileToUpload: File | Blob | null = null;
-    let fileNameToUpload: string | undefined = undefined;
+    let fileToUpload: File | Blob | null;
+    let fileNameToUpload: string | undefined;
 
     if (files.length >= 2) {
       fileToUpload = await downloadZip(files, { buffersAreUTF8: true }).blob();
@@ -58,9 +58,9 @@ export function Uploader() {
       fileNameToUpload = files[0].name;
     }
 
-    const { upload_url, download_url } = await fetchPresignedUrls({
-      file_name: fileNameToUpload,
-      expires_in_secs: 7 * 24 * 60 * 60, // 7 days
+    const { uploadUrl, downloadUrl } = await fetchPresignedUrls({
+      fileName: fileNameToUpload,
+      expiresInSecs: 7 * 24 * 60 * 60, // 7 days
     });
 
     const config: AxiosRequestConfig<File> = {
@@ -73,20 +73,11 @@ export function Uploader() {
     };
 
     try {
-      await axios.put(upload_url, fileToUpload, config);
-      const { download_url: new_download_url } = await fetchUploadReady({
-        fileName: fileNameToUpload,
-        downloadUrl
-      });
-      if (new_download_url) {
-        setDownloadUrl(new_download_url);
-        navigator.clipboard.writeText(new_download_url);
-      } else {
-        setDownloadUrl(download_url);
-        navigator.clipboard.writeText(download_url);
-      }
+      await axios.put(uploadUrl, fileToUpload, config);
+      setDownloadUrl(downloadUrl);
       setIsUploading(false);
       setFileName(fileNameToUpload);
+      navigator.clipboard.writeText(downloadUrl);
     } catch (error) {
       console.error("Failed to upload file:", error);
       setIsUploading(false);
