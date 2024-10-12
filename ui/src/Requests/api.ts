@@ -19,6 +19,12 @@ export async function fetchPresignedUrls(props: CreateLinkRequest) {
       "Content-Type": "application/json",
     },
   });
+
+  // Session expired
+  if (res.status === 403) {
+    location.reload();
+  }
+
   if (!res.ok) {
     throw new Error(await res.json());
   }
