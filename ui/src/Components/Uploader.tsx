@@ -60,7 +60,7 @@ export function Uploader() {
 
     const { uploadUrl, downloadUrl } = await fetchPresignedUrls({
       fileName: fileNameToUpload,
-      expiresInSecs: 7 * 24 * 60 * 60, // 7 days
+      expiresInSecs: 7 * 24 * 60 * 60, // 7 days max for presigned urls
     });
 
     const config: AxiosRequestConfig<File> = {
