@@ -115,8 +115,8 @@ async fn upload_url_handler(req: web::Json<UploadRequest>, data: web::Data<AppSt
 }
 
 #[get("/status")]
-async fn ok() -> impl Responder {
-    HttpResponse::Ok().body("Ok")
+async fn status() -> impl Responder {
+    HttpResponse::Ok().body("OK")
 }
 
 #[actix_web::main]
@@ -139,7 +139,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(AppState { s3_client: init_client(&config) }))
             .wrap(Logger::default())
             .wrap(cors)
-            .service(ok)
+            .service(status)
             .service(upload_url_handler)
             .service(fs::Files::new("/icon.svg", "static").index_file("icon.svg"))
             .service(fs::Files::new("/", "static").index_file("index.html").show_files_listing())
