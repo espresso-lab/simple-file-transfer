@@ -53,25 +53,19 @@ struct UploadResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct UploadReadyRequest {
-    file_name: String,
-    download_url: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 struct LinkShortenerRequest {
     slug: String,
     url: String,
+    expires_in_secs: u64
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LinkWithSlugUrl {
-    pub url_slug: Option<String>,
+    pub forwarder_url: String,
 }
 
-async fn generate_short_url(download_url: String, file_name: String) -> Result<String, Error> {
+async fn generate_short_url(download_url: String, file_name: String, expires_in_secs: u64) -> Result<String, Error> {
     let link_shortener_endpoint = env::var("LINK_SHORTENER_ENDPOINT").unwrap_or("".to_string());
     let link_shortener_random_slug = env::var("LINK_SHORTENER_RANDOM_SLUG")
         .unwrap_or("".to_string())
@@ -93,13 +87,14 @@ async fn generate_short_url(download_url: String, file_name: String) -> Result<S
         .json(&LinkShortenerRequest {
             slug,
             url: download_url.clone(),
+            expires_in_secs
         })
         .send()
         .await;
 
     let link: LinkWithSlugUrl = response.unwrap().json().await.unwrap();
 
-    Ok(link.url_slug.unwrap())
+    Ok(link.forwarder_url)
 }
 
 #[post("/upload-url")]
@@ -134,11 +129,11 @@ async fn upload_url_handler(
         .get_object()
         .bucket(&bucket_name)
         .key(file_name.clone())
-        .presigned(PresigningConfig::expires_in(Duration::from_secs(expires_in_secs)).unwrap())
+        .presigned(PresigningConfig::expires_in(Duration::from_secs(expires_in_secs.clone())).unwrap())
         .await.unwrap().uri().to_string();
 
     if env::var("LINK_SHORTENER_ENDPOINT").is_ok() {
-        match generate_short_url(download_url.clone(), file_name).await {
+        match generate_short_url(download_url.clone(), file_name, expires_in_secs.clone()).await {
             Ok(val) => download_url = val,
             Err(..) => ()
         }
