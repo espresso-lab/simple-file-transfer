@@ -47,14 +47,14 @@ struct UploadResponse {
 #[serde(rename_all = "camelCase")]
 struct LinkShortenerRequest {
     slug: String,
-    url: String,
+    target_url: String,
     expires_in_secs: u64
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LinkShortenerResponse {
-    pub forwarder_url: String,
+    pub shortened_url: String,
 }
 
 async fn generate_short_url(download_url: String, file_name: String, expires_in_secs: u64) -> Result<String, Error> {
@@ -69,13 +69,13 @@ async fn generate_short_url(download_url: String, file_name: String, expires_in_
     };
     let response = reqwest::Client::new()
         .post(&link_shortener_endpoint)
-        .json(&LinkShortenerRequest { slug, url: download_url.clone(), expires_in_secs })
+        .json(&LinkShortenerRequest { slug, target_url: download_url.clone(), expires_in_secs })
         .send()
         .await.unwrap();
 
     let link: LinkShortenerResponse = response.json().await.unwrap();
 
-    Ok(link.forwarder_url)
+    Ok(link.shortened_url)
 }
 
 #[post("/upload-url")]
