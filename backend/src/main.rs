@@ -7,16 +7,16 @@ use env_logger::Env;
 use s3::{presigning::PresigningConfig, Client};
 use serde::{Deserialize, Serialize};
 use std::env;
+use std::io::Error;
 use std::time::Duration;
 use uuid::Uuid;
 use validator::Validate;
-use chrono::NaiveDateTime;
 
 struct AppState {
     s3_client: Client,
 }
 
-// Initialize S3 slient
+// Initialize S3 client
 fn init_client(config: &SdkConfig) -> Client {
     let s3_endpoint = env::var("S3_ENDPOINT").unwrap_or("".to_string());
 
@@ -37,6 +37,7 @@ fn init_client(config: &SdkConfig) -> Client {
 }
 
 #[derive(Deserialize, Debug, Validate)]
+#[serde(rename_all = "camelCase")]
 struct UploadRequest {
     #[validate(length(min = 3))]
     file_name: String,
@@ -44,18 +45,21 @@ struct UploadRequest {
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct UploadResponse {
     upload_url: String,
     download_url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct UploadReadyRequest {
     file_name: String,
     download_url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct LinkShortenerRequest {
     slug: String,
     url: String,
@@ -63,67 +67,39 @@ struct LinkShortenerRequest {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct LinkWithSlugUrlAndClicks {
-    pub slug: String,
+pub struct LinkWithSlugUrl {
     pub url_slug: Option<String>,
-    pub url: String,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
-    pub clicks: Option<i32>,
 }
 
-#[post("/upload-ready")]
-async fn upload_ready_handler(
-    payload: web::Json<UploadReadyRequest>,
-) -> impl Responder {
-    let payload = payload.into_inner();
-    let file_name = payload.file_name;
-    let download_url = payload.download_url;
-
+async fn generate_short_url(download_url: String, file_name: String) -> Result<String, Error> {
     let link_shortener_endpoint = env::var("LINK_SHORTENER_ENDPOINT").unwrap_or("".to_string());
     let link_shortener_random_slug = env::var("LINK_SHORTENER_RANDOM_SLUG")
         .unwrap_or("".to_string())
         .to_lowercase()
         .eq("true");
 
-    if !link_shortener_endpoint.is_empty() {
-        let response = reqwest::Client::new()
-            .post(&link_shortener_endpoint)
-            .json(&LinkShortenerRequest {
-                slug: if link_shortener_random_slug {
-                    "".to_string()
-                } else {
-                    file_name.clone()
-                },
-                url: download_url.clone(),
-            })
-            .send()
-            .await;
-
-        match response {
-            Ok(response) => {
-                if response.status().is_success() {
-                    let link: LinkWithSlugUrlAndClicks = response.json().await.unwrap();
-                    HttpResponse::Ok().json(UploadResponse {
-                        upload_url: "".to_string(),
-                        download_url: link.url,
-                    })
-                } else {
-                    println!("Error: {:?}", response);
-                    HttpResponse::InternalServerError().json(response.text().await.unwrap())
-                }
-            }
-            Err(err) => {
-                println!("Request Error: {:?}", err);
-                HttpResponse::InternalServerError().json(err.to_string())
-            }
-        }
-    } else {
-        HttpResponse::Ok().json(UploadResponse {
-            upload_url: "".to_string(),
-            download_url,
-        })
+    if link_shortener_endpoint.is_empty() {
+        return Ok(download_url.clone())
     }
+
+    let slug = if link_shortener_random_slug {
+        "".to_string()
+    } else {
+        file_name.clone()
+    };
+
+    let response = reqwest::Client::new()
+        .post(&link_shortener_endpoint)
+        .json(&LinkShortenerRequest {
+            slug,
+            url: download_url.clone(),
+        })
+        .send()
+        .await;
+
+    let link: LinkWithSlugUrl = response.unwrap().json().await.unwrap();
+
+    Ok(link.url_slug.unwrap())
 }
 
 #[post("/upload-url")]
@@ -153,17 +129,24 @@ async fn upload_url_handler(
         )
         .await;
 
-    let result_download = data
+    let mut download_url = data
         .s3_client
         .get_object()
         .bucket(&bucket_name)
-        .key(file_name)
+        .key(file_name.clone())
         .presigned(PresigningConfig::expires_in(Duration::from_secs(expires_in_secs)).unwrap())
-        .await;
+        .await.unwrap().uri().to_string();
+
+    if env::var("LINK_SHORTENER_ENDPOINT").is_ok() {
+        match generate_short_url(download_url.clone(), file_name).await {
+            Ok(val) => download_url = val,
+            Err(..) => ()
+        }
+    }
 
     HttpResponse::Ok().json(UploadResponse {
         upload_url: result_upload.unwrap().uri().to_string(),
-        download_url: result_download.unwrap().uri().to_string(),
+        download_url,
     })
 }
 
@@ -201,7 +184,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(ok)
             .service(upload_url_handler)
-            .service(upload_ready_handler)
             .service(fs::Files::new("/icon.svg", "static").index_file("icon.svg"))
             .service(
                 fs::Files::new("/", "static")

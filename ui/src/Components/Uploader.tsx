@@ -75,8 +75,8 @@ export function Uploader() {
     try {
       await axios.put(upload_url, fileToUpload, config);
       const { download_url: new_download_url } = await fetchUploadReady({
-        file_name: fileNameToUpload,
-        download_url
+        fileName: fileNameToUpload,
+        downloadUrl
       });
       if (new_download_url) {
         setDownloadUrl(new_download_url);

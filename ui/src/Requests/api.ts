@@ -7,8 +7,8 @@ export interface CreateLinkRequest {
 }
 
 export interface UploadReadyRequest {
-  file_name: string;
-  download_url: string;
+  fileName: string;
+  downloadUrl: string;
 }
 
 export interface CreateLinkResponse {
