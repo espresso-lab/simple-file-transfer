@@ -11,7 +11,7 @@ export interface CreateLinkResponse {
   downloadUrl: string;
 }
 
-export async function fetchPresignedUrls(props: CreateLinkRequest) {
+export async function fetchPreSignedUrls(props: CreateLinkRequest) {
   const res = await fetch(`${hostname}/upload-url`, {
     method: "POST",
     body: JSON.stringify(props),

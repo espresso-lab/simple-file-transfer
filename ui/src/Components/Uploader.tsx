@@ -17,7 +17,7 @@ import {IconArrowDown, IconCheck, IconCopy, IconFilePlus, IconShare} from "@tabl
 import axios, { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { downloadZip } from "client-zip";
 import { useRef, useState } from "react";
-import {fetchPresignedUrls} from "../Requests/api";
+import {fetchPreSignedUrls} from "../Requests/api";
 
 export function Uploader() {
   const dropzoneOpenRef = useRef<() => void>(null);
@@ -58,7 +58,7 @@ export function Uploader() {
       fileNameToUpload = files[0].name;
     }
 
-    const { uploadUrl, downloadUrl } = await fetchPresignedUrls({
+    const { uploadUrl, downloadUrl } = await fetchPreSignedUrls({
       fileName: fileNameToUpload,
       expiresInSecs: 7 * 24 * 60 * 60, // 7 days max for presigned urls
     });
