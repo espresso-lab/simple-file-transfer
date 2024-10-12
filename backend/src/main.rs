@@ -10,6 +10,7 @@ use std::env;
 use std::time::Duration;
 use uuid::Uuid;
 use validator::Validate;
+use chrono::NaiveDateTime;
 
 struct AppState {
     s3_client: Client,
@@ -46,6 +47,83 @@ struct UploadRequest {
 struct UploadResponse {
     upload_url: String,
     download_url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct UploadReadyRequest {
+    file_name: String,
+    download_url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct LinkShortenerRequest {
+    slug: String,
+    url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LinkWithSlugUrlAndClicks {
+    pub slug: String,
+    pub url_slug: Option<String>,
+    pub url: String,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+    pub clicks: Option<i32>,
+}
+
+#[post("/upload-ready")]
+async fn upload_ready_handler(
+    payload: web::Json<UploadReadyRequest>,
+) -> impl Responder {
+    let payload = payload.into_inner();
+    let file_name = payload.file_name;
+    let download_url = payload.download_url;
+
+    let link_shortener_endpoint = env::var("LINK_SHORTENER_ENDPOINT").unwrap_or("".to_string());
+    let link_shortener_random_slug = env::var("LINK_SHORTENER_RANDOM_SLUG")
+        .unwrap_or("".to_string())
+        .to_lowercase()
+        .eq("true");
+
+    if !link_shortener_endpoint.is_empty() {
+        let response = reqwest::Client::new()
+            .post(&link_shortener_endpoint)
+            .json(&LinkShortenerRequest {
+                slug: if link_shortener_random_slug {
+                    "".to_string()
+                } else {
+                    file_name.clone()
+                },
+                url: download_url.clone(),
+            })
+            .send()
+            .await;
+
+        match response {
+            Ok(response) => {
+                if response.status().is_success() {
+                    let link: LinkWithSlugUrlAndClicks = response.json().await.unwrap();
+                    HttpResponse::Ok().json(UploadResponse {
+                        upload_url: "".to_string(),
+                        download_url: link.url,
+                    })
+                } else {
+                    println!("Error: {:?}", response);
+                    HttpResponse::InternalServerError().json(response.text().await.unwrap())
+                }
+            }
+            Err(err) => {
+                println!("Request Error: {:?}", err);
+                HttpResponse::InternalServerError().json(err.to_string())
+            }
+        }
+    } else {
+        HttpResponse::Ok().json(UploadResponse {
+            upload_url: "".to_string(),
+            download_url,
+        })
+    }
 }
 
 #[post("/upload-url")]
@@ -121,8 +199,9 @@ async fn main() -> std::io::Result<()> {
             }))
             .wrap(Logger::default())
             .wrap(cors)
-            .service(upload_url_handler)
             .service(ok)
+            .service(upload_url_handler)
+            .service(upload_ready_handler)
             .service(fs::Files::new("/icon.svg", "static").index_file("icon.svg"))
             .service(
                 fs::Files::new("/", "static")
@@ -130,7 +209,7 @@ async fn main() -> std::io::Result<()> {
                     .show_files_listing(),
             )
     })
-    .bind("0.0.0.0:3000")?
-    .run()
-    .await
+        .bind("0.0.0.0:3000")?
+        .run()
+        .await
 }

@@ -13,11 +13,11 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { IconArrowDown, IconFilePlus } from "@tabler/icons-react";
+import {IconArrowDown, IconCheck, IconCopy, IconFilePlus, IconShare} from "@tabler/icons-react";
 import axios, { AxiosProgressEvent, AxiosRequestConfig } from "axios";
 import { downloadZip } from "client-zip";
 import { useRef, useState } from "react";
-import { fetchPresignedUrls } from "../Requests/api";
+import {fetchPresignedUrls, fetchUploadReady} from "../Requests/api";
 
 export function Uploader() {
   const dropzoneOpenRef = useRef<() => void>(null);
@@ -74,10 +74,19 @@ export function Uploader() {
 
     try {
       await axios.put(upload_url, fileToUpload, config);
+      const { download_url: new_download_url } = await fetchUploadReady({
+        file_name: fileNameToUpload,
+        download_url
+      });
+      if (new_download_url) {
+        setDownloadUrl(new_download_url);
+        navigator.clipboard.writeText(new_download_url);
+      } else {
+        setDownloadUrl(download_url);
+        navigator.clipboard.writeText(download_url);
+      }
       setIsUploading(false);
       setFileName(fileNameToUpload);
-      setDownloadUrl(download_url);
-      navigator.clipboard.writeText(download_url);
     } catch (error) {
       console.error("Failed to upload file:", error);
       setIsUploading(false);
@@ -179,13 +188,17 @@ export function Uploader() {
             <CopyButton value={downloadUrl}>
               {({ copied, copy }) => (
                 <Tooltip label={fileName}>
-                  <Button color={copied ? "teal" : "green"} onClick={copy}>
-                    {copied ? "Copied url" : "Copy url"}
+                  <Button color={copied ? "teal" : "green"} onClick={copy} rightSection={copied ? (
+                      <IconCheck style={{width: rem(16)}}/>
+                  ) : (
+                      <IconCopy style={{width: rem(16)}}/>
+                  )}>
+                    {copied ? "Done" : "Copy"}
                   </Button>
                 </Tooltip>
               )}
             </CopyButton>
-            <Button onClick={handleShareLink}>Share</Button>
+            <Button onClick={handleShareLink} rightSection={<IconShare style={{ width: rem(16) }} />}>Share</Button>
           </Group>
         </Box>
       )}

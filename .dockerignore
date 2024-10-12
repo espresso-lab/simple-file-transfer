@@ -1,4 +1,0 @@
-target
-.http
-*.db*
-node_modules

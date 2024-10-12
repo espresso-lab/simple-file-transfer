@@ -1,6 +1,5 @@
-FROM rust:latest AS builder
+FROM rust:slim AS builder
 WORKDIR /app
-COPY Cargo* .
-CMD cargo install
+RUN cargo install cargo-watch
 COPY . .
-CMD cargo run
+CMD cargo watch -x run
