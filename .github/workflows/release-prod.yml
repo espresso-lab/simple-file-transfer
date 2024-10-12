@@ -1,9 +1,7 @@
-name: Build & Push 📦
+name: Build & Push PROD 📦
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*"
 
@@ -59,3 +57,18 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Build and push Helm Chart
+        run: |
+          if [[ $GITHUB_REF_NAME != v* ]]; then
+            exit 0
+          fi
+          mkdir -p .helm-packages
+          HELM_VERSION="${GITHUB_REF_NAME#v}"
+          helm package ./helm --version "$HELM_VERSION" --app-version "$GITHUB_REF_NAME" -d .helm-packages
+          for pkg in .helm-packages/*; do
+            if [ -z "${pkg:-}" ]; then
+              break
+            fi
+            helm push "${pkg}" oci://ghcr.io/${{ github.repository_owner }}/helm-charts
+          done
